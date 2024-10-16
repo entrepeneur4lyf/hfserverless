@@ -1,5 +1,5 @@
 {
-    "name": "phpstack/hfserverless",
+    "name": "entrepeneur4lyf/hfserverless",
     "version": "0.0.1",
     "description": "A php wrapper for the huggingface inference api",
     "keywords": ["php", "skeleton", "package"],

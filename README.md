@@ -12,7 +12,7 @@ This package provides a simple PHP wrapper for the Hugging Face Serverless Infer
 You can install this package via Composer:
 
 ```bash
-composer require phpstack/hfserverless
+composer require entrepeneur4lyf/hfserverless
 ```
 
 This will install the package and its dependencies, including Guzzle and Spatie/Async, which are used for making HTTP requests and handling asynchronous operations.
