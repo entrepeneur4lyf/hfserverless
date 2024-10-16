@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Refactored `asyncTextGeneration` and `asyncChatCompletion` methods in HFServerless class to use Spatie/Async correctly.
+- Updated these methods to run tasks and return results directly, rather than returning Task objects.
+- Modified src/Example.php to demonstrate the correct usage of the updated async methods.
+
+### Improved
+- Enhanced asynchronous operation handling for better performance and reliability.
+- Simplified usage of async methods in client code.
+
 ### Added
 - Tool calling support for chat completion methods.
 - New parameters in `chatCompletion` and `asyncChatCompletion` methods: `$tools`, `$toolChoice`, and `$toolPrompt`.

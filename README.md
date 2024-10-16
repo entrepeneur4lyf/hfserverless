@@ -1,5 +1,18 @@
 # HFServerless - Hugging Face Serverless Inference API PHP Wrapper
 
+The Serverless Inference API offers a fast and free way to explore thousands of models for a variety of tasks. Whether you're prototyping a new application or experimenting with ML capabilities, this API gives you instant access to high-performing models across multiple domains:
+
+- Text Generation: Including large language models and tool-calling prompts, generate and experiment with high-quality responses.
+- Image Generation: Easily create customized images, including LoRAs for your own styles.
+- Document Embeddings: Build search and retrieval systems with SOTA embeddings.
+- Classical AI Tasks: Ready-to-use models for text classification, image classification, speech recognition, and more.
+
+⚡ Fast and Free to Get Started: The Inference API is free with higher rate limits for PRO users.
+
+![Supported Models](https://huggingface.co/docs/api-inference/supported-models)
+
+IMG HERE
+
 This package provides a simple PHP wrapper for the Hugging Face Serverless Inference API, allowing you to easily integrate Hugging Face's powerful machine learning models into your PHP projects.
 
 ## Requirements
@@ -27,7 +40,6 @@ Here's a basic example of how to use the HFServerless package:
 require_once __DIR__ . '/vendor/autoload.php';
 
 use App\HFServerless\HFServerless;
-use Spatie\Async\Pool;
 
 // Replace 'your_access_token_here' with your actual Hugging Face access token
 $accessToken = 'your_access_token_here';
@@ -53,18 +65,12 @@ try {
     $result = $hfServerless->textGeneration($modelId, $inputs, $parameters);
     echo "Generated text: " . $result[0]['generated_text'] . "\n";
 
-    // Example 3: Text Generation with cache control and model loading options
-    $resultWithOptions = $hfServerless->textGeneration($modelId, $inputs, $parameters, false, true);
-    echo "Generated text (no cache, wait for model): " . $resultWithOptions[0]['generated_text'] . "\n";
+    // Example 3: Asynchronous Text Generation
+    echo "Performing Asynchronous Text Generation:\n";
+    $asyncTextGenerationResult = $hfServerless->asyncTextGeneration($modelId, $inputs, $parameters);
+    echo "Asynchronous Text Generation result: " . $asyncTextGenerationResult[0]['generated_text'] . "\n";
 
-    // Example 4: Automatic Speech Recognition
-    $asrModelId = 'openai/whisper-large-v3';
-    $audioFilePath = 'path/to/your/audio/file.mp3';
-    $asrParameters = ['return_timestamps' => true];
-    $asrResult = $hfServerless->automaticSpeechRecognition($asrModelId, $audioFilePath, $asrParameters);
-    echo "Transcribed text: " . $asrResult['text'] . "\n";
-
-    // Example 5: Chat Completion
+    // Example 4: Chat Completion
     $chatModelId = 'google/gemma-2-2b-it';
     $messages = [
         ['role' => 'user', 'content' => 'What is the capital of France?']
@@ -76,7 +82,19 @@ try {
     $chatResult = $hfServerless->chatCompletion($chatModelId, $messages, $chatParameters);
     echo "Chat response: " . $chatResult['choices'][0]['message']['content'] . "\n";
 
-    // Example 6: Feature Extraction
+    // Example 5: Asynchronous Chat Completion
+    echo "Performing Asynchronous Chat Completion:\n";
+    $asyncChatCompletionResult = $hfServerless->asyncChatCompletion($chatModelId, $messages, $chatParameters);
+    echo "Asynchronous Chat Completion result: " . $asyncChatCompletionResult['choices'][0]['message']['content'] . "\n";
+
+    // Example 6: Automatic Speech Recognition
+    $asrModelId = 'openai/whisper-large-v3';
+    $audioFilePath = 'path/to/your/audio/file.mp3';
+    $asrParameters = ['return_timestamps' => true];
+    $asrResult = $hfServerless->automaticSpeechRecognition($asrModelId, $audioFilePath, $asrParameters);
+    echo "Transcribed text: " . $asrResult['text'] . "\n";
+
+    // Example 7: Feature Extraction
     $featureExtractionModelId = 'thenlper/gte-large';
     $text = "Today is a sunny day and I will get some ice cream.";
     $featureExtractionParameters = ['normalize' => true];
@@ -84,7 +102,7 @@ try {
     echo "Feature vector (first 5 elements): " . implode(', ', array_slice($featureExtractionResult[0], 0, 5)) . "...\n";
     echo "Vector dimension: " . count($featureExtractionResult[0]) . "\n";
 
-    // Example 7: Image Classification
+    // Example 8: Image Classification
     $imageClassificationModelId = 'google/vit-base-patch16-224';
     $imagePath = 'path/to/your/image.jpg';
     $imageClassificationParameters = ['top_k' => 3];
@@ -93,7 +111,7 @@ try {
         echo "Label: {$result['label']}, Score: {$result['score']}\n";
     }
 
-    // Example 8: Image to Image
+    // Example 9: Image to Image
     $imageToImageModelId = 'timbrooks/instruct-pix2pix';
     $imagePath = 'path/to/your/input_image.jpg';
     $imageToImageParameters = [
@@ -106,7 +124,7 @@ try {
     file_put_contents('path/to/your/output_image.jpg', $imageToImageResult);
     echo "Image to Image transformation completed. Output saved.\n";
 
-    // Example 9: Object Detection
+    // Example 10: Object Detection
     $objectDetectionModelId = 'facebook/detr-resnet-50';
     $imagePath = 'path/to/your/image.jpg';
     $objectDetectionParameters = ['threshold' => 0.9];
@@ -117,7 +135,7 @@ try {
         echo "x2: {$result['box']['xmax']}, y2: {$result['box']['ymax']})\n";
     }
 
-    // Example 10: Question Answering
+    // Example 11: Question Answering
     $questionAnsweringModelId = 'deepset/roberta-base-squad2';
     $question = "What is my name?";
     $context = "My name is Clara and I live in Berkeley.";
@@ -128,7 +146,7 @@ try {
     echo "Answer: {$questionAnsweringResult['answer']}\n";
     echo "Score: {$questionAnsweringResult['score']}\n";
 
-    // Example 11: Summarization
+    // Example 12: Summarization
     $summarizationModelId = 'facebook/bart-large-cnn';
     $textToSummarize = "The tower is 324 metres (1,063 ft) tall, about the same height as an 81-storey building, and the tallest structure in Paris. Its base is square, measuring 125 metres (410 ft) on each side. During its construction, the Eiffel Tower surpassed the Washington Monument to become the tallest man-made structure in the world, a title it held for 41 years until the Chrysler Building in New York City was finished in 1930. It was the first structure to reach a height of 300 metres. Due to the addition of a broadcasting aerial at the top of the tower in 1957, it is now taller than the Chrysler Building by 5.2 metres (17 ft). Excluding transmitters, the Eiffel Tower is the second tallest free-standing structure in France after the Millau Viaduct.";
     $summarizationParameters = [
@@ -139,7 +157,7 @@ try {
     $summarizationResult = $hfServerless->summarization($summarizationModelId, $textToSummarize, $summarizationParameters);
     echo "Summarized text: {$summarizationResult[0]['summary_text']}\n";
 
-    // Example 12: Text to Image
+    // Example 13: Text to Image
     $textToImageModelId = 'black-forest-labs/FLUX.1-dev';
     $prompt = "Astronaut riding a horse";
     $textToImageParameters = [
@@ -155,27 +173,7 @@ try {
     file_put_contents('generated_image.jpg', $imageBytes);
     echo "Text to Image generation completed. Output saved to: generated_image.jpg\n";
 
-    // Example 13: Asynchronous Text Generation
-    echo "Performing Asynchronous Text Generation:\n";
-    $asyncTextGenerationTask = $hfServerless->asyncTextGeneration($modelId, $inputs, $parameters);
-    
-    $asyncTextGenerationTask->then(function (array $result) {
-        echo "Asynchronous Text Generation result: " . $result[0]['generated_text'] . "\n";
-    })->catch(function (\Exception $exception) {
-        echo "Asynchronous Text Generation error: " . $exception->getMessage() . "\n";
-    });
-
-    // Example 14: Asynchronous Chat Completion
-    echo "Performing Asynchronous Chat Completion:\n";
-    $asyncChatCompletionTask = $hfServerless->asyncChatCompletion($chatModelId, $messages, $chatParameters);
-    
-    $asyncChatCompletionTask->then(function (array $result) {
-        echo "Asynchronous Chat Completion result: " . $result['choices'][0]['message']['content'] . "\n";
-    })->catch(function (\Exception $exception) {
-        echo "Asynchronous Chat Completion error: " . $exception->getMessage() . "\n";
-    });
-
-    // Example 15: Chat Completion with Tool Calling
+    // Example 14: Chat Completion with Tool Calling
     echo "Performing Chat Completion with Tool Calling:\n";
     $toolCallingMessages = [
         ['role' => 'user', 'content' => 'What's the weather like in New York?']
@@ -213,9 +211,6 @@ try {
     } else {
         echo "Chat response: " . $toolCallingResult['choices'][0]['message']['content'] . "\n";
     }
-
-    // Wait for all async tasks to complete
-    Pool::create()->wait();
 
 } catch (\Exception $e) {
     echo "Error: " . $e->getMessage() . "\n";
@@ -268,14 +263,14 @@ All methods now support two additional parameters:
 
 ### Asynchronous Methods
 
-- `asyncTextGeneration(string $modelId, string $inputs, array $parameters = [], bool $useCache = true, bool $waitForModel = false): \Spatie\Async\Task`
-- `asyncChatCompletion(string $modelId, array $messages, array $parameters = [], bool $useCache = true, bool $waitForModel = false, bool $stream = false, ?array $tools = null, ?string $toolChoice = null, ?string $toolPrompt = null): \Spatie\Async\Task`
+- `asyncTextGeneration(string $modelId, string $inputs, array $parameters = [], bool $useCache = true, bool $waitForModel = false): array`
+- `asyncChatCompletion(string $modelId, array $messages, array $parameters = [], bool $useCache = true, bool $waitForModel = false, bool $stream = false, ?array $tools = null, ?string $toolChoice = null, ?string $toolPrompt = null): array|Generator`
 
-These asynchronous methods return a `\Spatie\Async\Task` object, which allows for non-blocking execution and provides methods like `then()` and `catch()` for handling the results or errors.
+These asynchronous methods now directly return the result of the operation, similar to their synchronous counterparts. The asynchronous execution is handled internally by the HFServerless class.
 
 ## Tool Calling in Chat Completion
 
-The `chatCompletion` and `asyncChatCompletion` methods now support tool calling. You can provide a list of tools, a tool choice, and a tool prompt to enable the model to use external functions during the conversation. Here's a brief explanation of the new parameters:
+The `chatCompletion` and `asyncChatCompletion` methods support tool calling. You can provide a list of tools, a tool choice, and a tool prompt to enable the model to use external functions during the conversation. Here's a brief explanation of the new parameters:
 
 - `$tools`: An array of tool definitions that the model can use.
 - `$toolChoice`: Specifies which tool the model should use (optional).

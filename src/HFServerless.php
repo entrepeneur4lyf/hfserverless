@@ -55,16 +55,19 @@ class HFServerless
 
     /**
      * @param array<string, mixed> $parameters
+     * @return array<int, array<string, string>>
      */
-    public function asyncTextGeneration(string $modelId, string $inputs, array $parameters = [], bool $useCache = true, bool $waitForModel = false): \Spatie\Async\Task
+    public function asyncTextGeneration(string $modelId, string $inputs, array $parameters = [], bool $useCache = true, bool $waitForModel = false): array
     {
         $pool = Pool::create();
 
-        return $pool->add(function () use ($modelId, $inputs, $parameters, $useCache, $waitForModel) {
+        $pool->add(function () use ($modelId, $inputs, $parameters, $useCache, $waitForModel) {
             return $this->textGeneration($modelId, $inputs, $parameters, $useCache, $waitForModel);
-        })->catch(function (\Throwable $exception) {
-            throw new \RuntimeException('Failed to make API request: ' . $exception->getMessage(), $exception->getCode(), $exception);
+        })->catch(function (\Throwable $e) {
+            throw new \RuntimeException('Failed to make API request: ' . $e->getMessage(), $e->getCode(), $e);
         });
+
+        return $pool->await();
     }
 
     /**
@@ -184,6 +187,7 @@ class HFServerless
      * @param array<int, array<string, string>> $messages
      * @param array<string, mixed> $parameters
      * @param array<int, array<string, mixed>>|null $tools
+     * @return array|Generator
      */
     public function asyncChatCompletion(
         string $modelId,
@@ -195,14 +199,16 @@ class HFServerless
         ?array $tools = null,
         ?string $toolChoice = null,
         ?string $toolPrompt = null
-    ): \Spatie\Async\Task {
+    ) {
         $pool = Pool::create();
 
-        return $pool->add(function () use ($modelId, $messages, $parameters, $useCache, $waitForModel, $stream, $tools, $toolChoice, $toolPrompt) {
+        $pool->add(function () use ($modelId, $messages, $parameters, $useCache, $waitForModel, $stream, $tools, $toolChoice, $toolPrompt) {
             return $this->chatCompletion($modelId, $messages, $parameters, $useCache, $waitForModel, $stream, $tools, $toolChoice, $toolPrompt);
-        })->catch(function (\Throwable $exception) {
-            throw new \RuntimeException('Failed to make API request: ' . $exception->getMessage(), $exception->getCode(), $exception);
+        })->catch(function (\Throwable $e) {
+            throw new \RuntimeException('Failed to make API request: ' . $e->getMessage(), $e->getCode(), $e);
         });
+
+        return $pool->await();
     }
 
     public function featureExtraction(string $modelId, string $text, array $parameters = [], bool $useCache = true, bool $waitForModel = false): array

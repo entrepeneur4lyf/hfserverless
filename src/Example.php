@@ -5,7 +5,6 @@ declare(strict_types=1);
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\HFServerless\HFServerless;
-use Spatie\Async\Pool;
 
 // Replace 'your_access_token_here' with your actual Hugging Face access token
 $accessToken = 'your_access_token_here';
@@ -30,15 +29,11 @@ try {
         'do_sample' => true,
     ];
 
-    $asyncTextGenerationTask = $hfServerless->asyncTextGeneration($modelId, $inputs, $parameters);
+    $asyncTextGenerationResult = $hfServerless->asyncTextGeneration($modelId, $inputs, $parameters);
 
-    $asyncTextGenerationTask->then(function (array $result) {
-        if (isset($result[0]['generated_text'])) {
-            echo "Asynchronous Text Generation result: " . $result[0]['generated_text'] . "\n";
-        }
-    })->catch(function (\Exception $exception) {
-        echo "Asynchronous Text Generation error: " . $exception->getMessage() . "\n";
-    });
+    if (isset($asyncTextGenerationResult[0]['generated_text'])) {
+        echo "Asynchronous Text Generation result: " . $asyncTextGenerationResult[0]['generated_text'] . "\n";
+    }
 
     // Example 3: Asynchronous Chat Completion
     echo "Performing Asynchronous Chat Completion:\n";
@@ -51,18 +46,11 @@ try {
         'temperature' => 0.7
     ];
 
-    $asyncChatCompletionTask = $hfServerless->asyncChatCompletion($chatModelId, $messages, $chatParameters);
+    $asyncChatCompletionResult = $hfServerless->asyncChatCompletion($chatModelId, $messages, $chatParameters);
 
-    $asyncChatCompletionTask->then(function ($result) {
-        if (is_array($result) && isset($result['choices'][0]['message']['content'])) {
-            echo "Asynchronous Chat Completion result: " . $result['choices'][0]['message']['content'] . "\n";
-        }
-    })->catch(function (\Exception $exception) {
-        echo "Asynchronous Chat Completion error: " . $exception->getMessage() . "\n";
-    });
-
-    // Wait for all async tasks to complete
-    Pool::create()->wait();
+    if (is_array($asyncChatCompletionResult) && isset($asyncChatCompletionResult['choices'][0]['message']['content'])) {
+        echo "Asynchronous Chat Completion result: " . $asyncChatCompletionResult['choices'][0]['message']['content'] . "\n";
+    }
 
     // Example 4: Automatic Speech Recognition (synchronous)
     echo "Performing Automatic Speech Recognition:\n";
