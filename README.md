@@ -9,7 +9,7 @@ The Serverless Inference API offers a fast and free way to explore thousands of 
 
 ⚡ Fast and Free to Get Started: The Inference API is free with higher rate limits for PRO users.
 
-![Supported Models](hfserverless.png)
+![Supported Models](https://github.com/entrepeneur4lyf/hfserverless/hfserverless.png)
 
 This package provides a simple PHP wrapper for the Hugging Face Serverless Inference API, allowing you to easily integrate Hugging Face's powerful machine learning models into your PHP projects.
 
