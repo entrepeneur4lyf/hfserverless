@@ -1,0 +1,59 @@
+{
+    "name": "phpstack/hfserverless",
+    "version": "0.0.1",
+    "description": "A php wrapper for the huggingface inference api",
+    "keywords": ["php", "skeleton", "package"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Shawn McAllister",
+            "email": "dev@phpstack.dev"
+        }
+    ],
+    "require": {
+        "php": "^8.0",
+        "guzzlehttp/guzzle": "^7.9",
+        "spatie/async": "^1.6"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.18.1",
+        "pestphp/pest": "^3.3.2",
+        "pestphp/pest-plugin-type-coverage": "^3.1",
+        "phpstan/phpstan": "^1.12.6",
+        "rector/rector": "^1.2.7",
+        "symfony/var-dumper": "^7.1.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\HFServerless\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true,
+        "preferred-install": "dist",
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "scripts": {
+        "refacto": "rector",
+        "lint": "pint",
+        "test:refacto": "rector --dry-run",
+        "test:lint": "pint --test",
+        "test:types": "phpstan analyse --ansi",
+        "test:unit": "pest --colors=always --coverage --parallel --min=100",
+        "test": [
+            "@test:refacto",
+            "@test:lint",
+            "@test:types",
+            "@test:unit"
+        ]
+    }
+}
