@@ -26,6 +26,10 @@ class HFServerless
         $this->client = $client;
     }
 
+    /**
+     * @param array<string, mixed> $parameters
+     * @return array<int, array<string, string>>
+     */
     public function textGeneration(string $modelId, string $inputs, array $parameters = [], bool $useCache = true, bool $waitForModel = false): array
     {
         $url = $this->apiUrl . $modelId;
@@ -38,23 +42,34 @@ class HFServerless
 
         try {
             $response = $this->makeRequest('POST', $url, $headers, $data);
+            return array_map(function ($item) {
+                return ['generated_text' => (string)($item['generated_text'] ?? '')];
+            }, $response);
         } catch (GuzzleException $e) {
             if ($e->getCode() === 503 && !$waitForModel) {
                 return $this->textGeneration($modelId, $inputs, $parameters, $useCache, true);
             }
             throw new \RuntimeException('Failed to make API request: ' . $e->getMessage(), $e->getCode(), $e);
         }
-
-        return $response;
     }
 
+    /**
+     * @param array<string, mixed> $parameters
+     */
     public function asyncTextGeneration(string $modelId, string $inputs, array $parameters = [], bool $useCache = true, bool $waitForModel = false): \Spatie\Async\Task
     {
-        return Pool::create()->add(function () use ($modelId, $inputs, $parameters, $useCache, $waitForModel) {
+        $pool = Pool::create();
+
+        return $pool->add(function () use ($modelId, $inputs, $parameters, $useCache, $waitForModel) {
             return $this->textGeneration($modelId, $inputs, $parameters, $useCache, $waitForModel);
+        })->catch(function (\Throwable $exception) {
+            throw new \RuntimeException('Failed to make API request: ' . $exception->getMessage(), $exception->getCode(), $exception);
         });
     }
 
+    /**
+     * @return array<int, array<string, string>>
+     */
     public function listModels(string $search = '', int $limit = 20): array
     {
         $url = 'https://huggingface.co/api/models';
@@ -68,7 +83,10 @@ class HFServerless
         ];
 
         try {
-            return $this->makeRequest('GET', $url, $headers, [], $queryParams);
+            $response = $this->makeRequest('GET', $url, $headers, [], $queryParams);
+            return array_map(function ($item) {
+                return ['id' => (string)($item['id'] ?? '')];
+            }, $response);
         } catch (GuzzleException $e) {
             throw new \RuntimeException('Failed to retrieve model list: ' . $e->getMessage(), $e->getCode(), $e);
         }
@@ -162,6 +180,11 @@ class HFServerless
         }
     }
 
+    /**
+     * @param array<int, array<string, string>> $messages
+     * @param array<string, mixed> $parameters
+     * @param array<int, array<string, mixed>>|null $tools
+     */
     public function asyncChatCompletion(
         string $modelId,
         array $messages,
@@ -173,8 +196,12 @@ class HFServerless
         ?string $toolChoice = null,
         ?string $toolPrompt = null
     ): \Spatie\Async\Task {
-        return Pool::create()->add(function () use ($modelId, $messages, $parameters, $useCache, $waitForModel, $stream, $tools, $toolChoice, $toolPrompt) {
+        $pool = Pool::create();
+
+        return $pool->add(function () use ($modelId, $messages, $parameters, $useCache, $waitForModel, $stream, $tools, $toolChoice, $toolPrompt) {
             return $this->chatCompletion($modelId, $messages, $parameters, $useCache, $waitForModel, $stream, $tools, $toolChoice, $toolPrompt);
+        })->catch(function (\Throwable $exception) {
+            throw new \RuntimeException('Failed to make API request: ' . $exception->getMessage(), $exception->getCode(), $exception);
         });
     }
 
@@ -451,21 +478,65 @@ class HFServerless
             'stream' => true,
         ]);
 
+        $buffer = '';
         $body = $response->getBody();
         while (!$body->eof()) {
-            $line = $body->read(1024);
-            if (strpos($line, 'data: ') === 0) {
-                $jsonData = json_decode(substr($line, 6), true);
-                if ($jsonData !== null) {
-                    yield $this->formatChatCompletionResponse($jsonData);
+            $chunk = $body->read(1024);
+            $buffer .= $chunk;
+
+            $messages = explode("\n\n", $buffer);
+            $buffer = array_pop($messages);
+
+            foreach ($messages as $message) {
+                $parsedMessage = $this->parseSSEMessage($message);
+                if (!empty($parsedMessage)) {
+                    yield $this->formatChatCompletionResponse($parsedMessage);
                 }
+            }
+        }
+
+        if (!empty($buffer)) {
+            $parsedMessage = $this->parseSSEMessage($buffer);
+            if (!empty($parsedMessage)) {
+                yield $this->formatChatCompletionResponse($parsedMessage);
             }
         }
     }
 
+    private function parseSSEMessage(string $message): array
+    {
+        $result = [];
+        $lines = explode("\n", $message);
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) continue;
+
+            $pos = strpos($line, ':');
+            if ($pos === false) {
+                $field = $line;
+                $value = '';
+            } else {
+                $field = substr($line, 0, $pos);
+                $value = trim(substr($line, $pos + 1));
+            }
+
+            if ($field === 'data') {
+                $jsonData = json_decode($value, true);
+                if ($jsonData !== null) {
+                    $result = array_merge($result, $jsonData);
+                }
+            } elseif ($field !== 'event') {
+                $result[$field] = $value;
+            }
+        }
+
+        return $result;
+    }
+
     private function formatChatCompletionResponse(array $response): array
     {
-        $formattedResponse = [
+        return [
             'id' => $response['id'] ?? '',
             'object' => $response['object'] ?? 'chat.completion',
             'created' => $response['created'] ?? time(),
@@ -488,7 +559,5 @@ class HFServerless
             }, $response['choices'] ?? []),
             'usage' => $response['usage'] ?? null,
         ];
-
-        return $formattedResponse;
     }
 }
