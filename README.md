@@ -4,7 +4,7 @@ This package provides a simple PHP wrapper for the Hugging Face Serverless Infer
 
 ## Requirements
 
-- PHP 8.3 or higher
+- PHP 8.0 or higher
 - Composer
 
 ## Installation

@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Code organization and documentation for better readability and maintainability.
 - Performance optimizations for large language model interactions.
 
-## [0.0.1] - 2023-XX-XX
+## [0.0.1] - 2024-10-16
 
 ### Added
 - Initial release of the HFServerless package.
@@ -43,5 +43,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cache control and model loading options for all API requests.
 - Comprehensive test suite for all public methods.
 
-[Unreleased]: https://github.com/yourusername/hfserverless/compare/v0.0.1...HEAD
-[0.0.1]: https://github.com/yourusername/hfserverless/releases/tag/v0.0.1
+[Unreleased]: https://github.com/entrepeneur4lyf/hfserverless/compare/v0.0.1...HEAD
+[0.0.1]: https://github.com/entrepeneur4lyf/hfserverless/releases/tag/v0.0.1
